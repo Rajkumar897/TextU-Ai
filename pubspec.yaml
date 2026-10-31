@@ -1,6 +1,7 @@
 name: textu_ai
-description: "TextU-AI - All-in-one smart AI companion! Chat with AI, convert photos to videos, and upscale videos in HD."
+description: "A secure AI-powered text, image, and video studio Flutter application."
 publish_to: 'none'
+
 version: 1.0.0+1
 
 environment:
@@ -9,7 +10,11 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  cupertino_icons: ^1.0.6
+
+  # UI Icons
+  cupertino_icons: ^1.0.8
+
+  # Networking & OpenAI API call ke liye
   http: ^1.2.0
 
 dev_dependencies:
