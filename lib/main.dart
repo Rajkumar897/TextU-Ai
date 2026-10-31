@@ -16,84 +16,183 @@ class TextUAIApp extends StatelessWidget {
         primarySwatch: Colors.deepPurple,
         useMaterial3: true,
       ),
-      home: const HomeScreen(),
+      home: const ChatHomeScreen(),
     );
   }
 }
 
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
+class ChatMessage {
+  final String text;
+  final bool isUser;
+  ChatMessage({required this.text, required this.isUser});
+}
+
+class ChatHomeScreen extends StatefulWidget {
+  const ChatHomeScreen({super.key});
+
+  @override
+  State<ChatHomeScreen> createState() => _ChatHomeScreenState();
+}
+
+class _ChatHomeScreenState extends State<ChatHomeScreen> {
+  final TextEditingController _controller = TextEditingController();
+  final List<ChatMessage> _messages = [
+    ChatMessage(text: "Hello! I am TextU-AI. How can I assist you today?", isUser: false),
+  ];
+  
+  String _selectedModel = "TextU-AI Pro (GPT-4)";
+  final List<String> _models = ["TextU-AI Pro (GPT-4)", "TextU-AI Mini (GPT-3.5)", "TextU-AI Creative"];
+
+  void _sendMessage() {
+    if (_controller.text.trim().isEmpty) return;
+
+    String userText = _controller.text;
+    setState(() {
+      _messages.add(ChatMessage(text: userText, isUser: true));
+      _controller.clear();
+    });
+
+    // Simulated AI Response based on selected model
+    Future.delayed(const Duration(seconds: 1), () {
+      setState(() {
+        _messages.add(ChatMessage(
+          text: "[$_selectedModel Response]: I processed your request regarding '$userText'. (API integration ready!)",
+          isUser: false,
+        ));
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('TextU-AI Companion'),
+        title: DropdownButton<String>(
+          value: _selectedModel,
+          dropdownColor: Colors.deepPurple[800],
+          style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+          underline: Container(),
+          icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
+          items: _models.map((String model) {
+            return DropdownMenuItem<String>(
+              value: model,
+              child: Text(model, style: const TextStyle(color: Colors.white)),
+            );
+          }).toList(),
+          onChanged: (String? newValue) {
+            setState(() {
+              _selectedModel = newValue!;
+            });
+          },
+        ),
         backgroundColor: Colors.deepPurple,
         foregroundColor: Colors.white,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add),
+            onPressed: () {
+              setState(() {
+                _messages.clear();
+                _messages.add(ChatMessage(text: "New chat started with $_selectedModel. Ask me anything!", isUser: false));
+              });
+            },
+            tooltip: 'New Chat',
+          ),
+        ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
           children: [
-            const Text(
-              'Welcome to TextU-AI!',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 10),
-            const Text(
-              'Your all-in-one smart AI companion for chat, photo-to-video conversion, and HD video upscaling.',
-              style: TextStyle(fontSize: 16, color: Colors.grey),
-            ),
-            const SizedBox(height: 30),
-            Expanded(
-              child: GridView.count(
-                crossAxisCount: 2,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-                children: const [
-                  FeatureCard(title: 'AI Chat', icon: Icons.chat, color: Colors.blue),
-                  FeatureCard(title: 'Photo to Video', icon: Icons.video_call, color: Colors.green),
-                  FeatureCard(title: 'HD Upscale', icon: Icons.hd, color: Colors.orange),
-                  FeatureCard(title: 'Earn Credits', icon: Icons.monetization_on, color: Colors.purple),
-                ],
+            const DrawerHeader(
+              decoration: BoxDecoration(color: Colors.deepPurple),
+              child: Text(
+                'TextU-AI Menu',
+                style: TextStyle(color: Colors.white, fontSize: 24),
               ),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class FeatureCard extends StatelessWidget {
-  final String title;
-  final IconData icon;
-  final Color color;
-
-  const FeatureCard({super.key, required this.title, required this.icon, required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: InkWell(
-        onTap: () {},
-        borderRadius: BorderRadius.circular(16),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 48, color: color),
-            const SizedBox(height: 12),
-            Text(
-              title,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
+            ListTile(
+              leading: const Icon(Icons.chat),
+              title: const Text('AI Chat'),
+              onTap: () => Navigator.pop(context),
+            ),
+            ListTile(
+              leading: const Icon(Icons.video_call),
+              title: const Text('Photo to Video'),
+              onTap: () {},
+            ),
+            ListTile(
+              leading: const Icon(Icons.hd),
+              title: const Text('HD Video Upscale'),
+              onTap: () {},
+            ),
+            ListTile(
+              leading: const Icon(Icons.monetization_on),
+              title: const Text('Earn Credits'),
+              onTap: () {},
             ),
           ],
         ),
+      ),
+      body: Column(
+        children: [
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.all(16.0),
+              itemCount: _messages.length,
+              itemBuilder: (context, index) {
+                final message = _messages[index];
+                return Align(
+                  alignment: message.isUser ? Alignment.centerRight : Alignment.centerLeft,
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(vertical: 6.0),
+                    padding: const EdgeInsets.all(14.0),
+                    decoration: BoxDecoration(
+                      color: message.isUser ? Colors.deepPurple[100] : Colors.grey[200],
+                      borderRadius: BorderRadius.circular(16.0),
+                    ),
+                    child: Text(
+                      message.text,
+                      style: TextStyle(
+                        color: message.isUser ? Colors.black87 : Colors.black,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.all(8.0),
+            color: Colors.white,
+            child: Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.mic, color: Colors.deepPurple),
+                  onPressed: () {
+                    // Voice input feature placeholder
+                  },
+                ),
+                Expanded(
+                  child: TextField(
+                    controller: _controller,
+                    decoration: const InputDecoration(
+                      hintText: 'Message TextU-AI...',
+                      border: OutlineInputBorder(),
+                      contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                IconButton(
+                  icon: const Icon(Icons.send, color: Colors.deepPurple),
+                  onPressed: _sendMessage,
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
